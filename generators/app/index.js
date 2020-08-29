@@ -29,6 +29,7 @@ module.exports = class extends Generator {
 
         // evaluateEngineVersion
         const dependencyVersions = await env.getDependencyVersions();
+        this.extensionConfig.dependencyVersions = dependencyVersions;
         this.extensionConfig.dep = function (name) {
             const version = dependencyVersions[name];
             if (typeof version === 'undefined') {
@@ -39,178 +40,155 @@ module.exports = class extends Generator {
         this.extensionConfig.vsCodeEngine = await env.getLatestVSCodeVersion();
     }
 
-    prompting() {
+    async prompting() {
         let generator = this;
-        let prompts = {
-            // Ask for extension type
-            askForType: () => {
-                const choices = [
-                    {
-                        name: 'New Web Extension (TypeScript)',
-                        value: 'ext-command-web'
-                    },
-                    {
-                        name: 'New Notebook Renderer (TypeScript)',
-                        value: 'ext-notebook-renderer'
-                    },
-                ];
 
-                return generator.prompt({
-                    type: 'list',
-                    name: 'type',
-                    message: 'What type of extension do you want to create?',
-                    pageSize: choices.length,
-                    choices,
-                }).then(typeAnswer => {
-                    generator.extensionConfig.type = typeAnswer.type;
-                });
-            },
 
-            // Ask for extension display name ("displayName" in package.json)
-            askForExtensionDisplayName: () => {
-                return generator.prompt({
+        async function getPrompts() {
+
+            const choices = [
+                {
+                    name: 'New Web Extension (TypeScript)',
+                    value: 'ext-command-web'
+                },
+                {
+                    name: 'Update to Web Extension',
+                    value: 'ext-command-web-update'
+                },
+                {
+                    name: 'New Notebook Renderer (TypeScript)',
+                    value: 'ext-notebook-renderer'
+                },
+            ];
+
+            const type = generator.extensionConfig.type = (await generator.prompt({
+                type: 'list',
+                name: 'type',
+                message: 'What type of extension do you want to create?',
+                pageSize: choices.length,
+                choices,
+            })).type;
+
+            switch (type) {
+                case 'ext-command-web':
+                    return [askForExtensionDisplayName, askForExtensionId, askForExtensionDescription, askForGit, askForPackageManager];
+                case 'ext-notebook-renderer':
+                    return [askForExtensionDisplayName, askForExtensionId, askForExtensionDescription, askForGit, askForNotebookRendererInfo, askForPackageManager];
+                default:
+                    return [];
+            }
+        }
+
+        // Ask for extension display name ("displayName" in package.json)
+        async function askForExtensionDisplayName() {
+            generator.extensionConfig.displayName = (await generator.prompt({
+                type: 'input',
+                name: 'displayName',
+                message: 'What\'s the name of your extension?',
+                default: generator.extensionConfig.displayName
+            })).displayName;
+        }
+
+        // Ask for extension id ("name" in package.json)
+        async function askForExtensionId() {
+            let def = generator.extensionConfig.name;
+            if (!def && generator.extensionConfig.displayName) {
+                def = generator.extensionConfig.displayName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            }
+            if (!def) {
+                def = '';
+            }
+
+            generator.extensionConfig.name = (await generator.prompt({
+                type: 'input',
+                name: 'name',
+                message: 'What\'s the identifier of your extension?',
+                default: def,
+                validate: validator.validateExtensionId
+            })).name;
+        }
+
+        // Ask for extension description
+        async function askForExtensionDescription() {
+            generator.extensionConfig.description = (await generator.prompt({
+                type: 'input',
+                name: 'description',
+                message: 'What\'s the description of your extension?'
+            })).description;
+        }
+
+        async function askForGit() {
+            generator.extensionConfig.gitInit = (await generator.prompt({
+                type: 'confirm',
+                name: 'gitInit',
+                message: 'Initialize a git repository?',
+                default: true
+            })).gitInit;
+        }
+
+        async function askForNotebookRendererInfo() {
+            const answers = await generator.prompt([
+                {
                     type: 'input',
-                    name: 'displayName',
-                    message: 'What\'s the name of your extension?',
+                    name: 'rendererId',
+                    message: 'What\'s the ID for your renderer?',
+                    default: generator.extensionConfig.name
+                },
+                {
+                    type: 'input',
+                    name: 'rendererDisplayName',
+                    message: 'What\'s your renderer display name?',
                     default: generator.extensionConfig.displayName
-                }).then(displayNameAnswer => {
-                    generator.extensionConfig.displayName = displayNameAnswer.displayName;
-                });
-            },
-
-            // Ask for extension id ("name" in package.json)
-            askForExtensionId: () => {
-                let def = generator.extensionConfig.name;
-                if (!def && generator.extensionConfig.displayName) {
-                    def = generator.extensionConfig.displayName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-                }
-                if (!def) {
-                    def = '';
-                }
-
-                return generator.prompt({
+                },
+                {
                     type: 'input',
-                    name: 'name',
-                    message: 'What\'s the identifier of your extension?',
-                    default: def,
-                    validate: validator.validateExtensionId
-                }).then(nameAnswer => {
-                    generator.extensionConfig.name = nameAnswer.name;
-                });
-            },
-
-            // Ask for extension description
-            askForExtensionDescription: () => {
-                return generator.prompt({
-                    type: 'input',
-                    name: 'description',
-                    message: 'What\'s the description of your extension?'
-                }).then(descriptionAnswer => {
-                    generator.extensionConfig.description = descriptionAnswer.description;
-                });
-            },
-
-            askForGit: () => {
-                if (['ext-command-web', 'ext-notebook-renderer'].indexOf(generator.extensionConfig.type) === -1) {
-                    return Promise.resolve();
-                }
-
-                return generator.prompt({
+                    name: 'rendererMimeTypes',
+                    message: 'What mime types will your renderer handle? (separate multiple by commas)',
+                    default: 'application/json',
+                },
+                {
                     type: 'confirm',
-                    name: 'gitInit',
-                    message: 'Initialize a git repository?',
-                    default: true
-                }).then(gitAnswer => {
-                    generator.extensionConfig.gitInit = gitAnswer.gitInit;
-                });
-            },
+                    name: 'includeContentProvider',
+                    message: 'Should we generate a test notebook content provider and kernel?',
+                    default: false,
+                },
+                {
+                    type: 'input',
+                    name: 'contentProviderFileType',
+                    message: 'What the file extension should the content provider handle?',
+                    default: '.sample-json-notebook',
+                    // @ts-ignore
+                    when: answers => answers.includeContentProvider,
+                    validate: answer => answer.startsWith('.') ? true : 'Extension should be given in the form ".ext"',
+                },
+            ]);
 
-            askForNotebookRendererInfo: async () => {
-                if (generator.extensionConfig.type !== 'ext-notebook-renderer') {
-                    return;
-                }
+            answers.rendererMimeTypes = answers.rendererMimeTypes.split(/,\s*/g);
+            Object.assign(generator.extensionConfig, answers);
+        }
 
-                const answers = await generator.prompt([
+        async function askForPackageManager() {
+            generator.extensionConfig.pkgManager = (await generator.prompt({
+                type: 'list',
+                name: 'pkgManager',
+                message: 'Which package manager to use?',
+                choices: [
                     {
-                        type: 'input',
-                        name: 'rendererId',
-                        message: 'What\'s the ID for your renderer?',
-                        default: generator.extensionConfig.name
+                        name: 'npm',
+                        value: 'npm'
                     },
                     {
-                        type: 'input',
-                        name: 'rendererDisplayName',
-                        message: 'What\'s your renderer display name?',
-                        default: generator.extensionConfig.displayName
-                    },
-                    {
-                        type: 'input',
-                        name: 'rendererMimeTypes',
-                        message: 'What mime types will your renderer handle? (separate multiple by commas)',
-                        default: 'application/json',
-                    },
-                    {
-                        type: 'confirm',
-                        name: 'includeContentProvider',
-                        message: 'Should we generate a test notebook content provider and kernel?',
-                        default: false,
-                    },
-                    {
-                        type: 'input',
-                        name: 'contentProviderFileType',
-                        message: 'What the file extension should the content provider handle?',
-                        default: '.sample-json-notebook',
-                        // @ts-ignore
-                        when: answers => answers.includeContentProvider,
-                        validate: answer => answer.startsWith('.') ? true : 'Extension should be given in the form ".ext"',
-                    },
-                ]);
-
-                answers.rendererMimeTypes = answers.rendererMimeTypes.split(/,\s*/g);
-                Object.assign(generator.extensionConfig, answers);
-            },
-
-            askForPackageManager: () => {
-                if (!['ext-command-web', 'ext-notebook-renderer'].includes(generator.extensionConfig.type)) {
-                    return Promise.resolve();
-                }
-                generator.extensionConfig.pkgManager = 'npm';
-                return generator.prompt({
-                    type: 'list',
-                    name: 'pkgManager',
-                    message: 'Which package manager to use?',
-                    choices: [
-                        {
-                            name: 'npm',
-                            value: 'npm'
-                        },
-                        {
-                            name: 'yarn',
-                            value: 'yarn'
-                        }
-                    ]
-                }).then(pckgManagerAnswer => {
-                    generator.extensionConfig.pkgManager = pckgManagerAnswer.pkgManager;
-                });
-            },
+                        name: 'yarn',
+                        value: 'yarn'
+                    }
+                ]
+            })).pkgManager;
         };
 
-        // run all prompts in sequence. Results can be ignored.
-        let result = Promise.resolve();
-        for (let taskName in prompts) {
-            let prompt = prompts[taskName];
-            result = result.then(_ => {
-                if (!this.abort) {
-                    return new Promise((s, r) => {
-                        setTimeout(_ => prompt().then(s, r), 0); // set timeout is required, otherwise node hangs
-                    });
-                }
-            }, error => {
-                generator.log(error.toString());
-                this.abort = true;
-            })
+        const prompts = await getPrompts();
+        for (const prompt of prompts) {
+            await prompt();
         }
-        return result;
     }
     // Write files
     writing() {
@@ -222,6 +200,9 @@ module.exports = class extends Generator {
         switch (this.extensionConfig.type) {
             case 'ext-command-web':
                 this._writingCommandWeb();
+                break;
+            case 'ext-command-web-update':
+                this._writingWebUpdate();
                 break;
             case 'ext-notebook-renderer':
                 this._writingNotebookRenderer();
@@ -265,7 +246,7 @@ module.exports = class extends Generator {
         this.extensionConfig.installDependencies = true;
     }
 
-    // Write Command Extension (TypeScript)
+    // Write Web Extension (TypeScript)
     _writingCommandWeb() {
         let context = this.extensionConfig;
 
@@ -293,14 +274,54 @@ module.exports = class extends Generator {
         this.extensionConfig.installDependencies = true;
     }
 
+    // Write Command Extension (TypeScript)
+    _writingWebUpdate() {
+        let context = this.extensionConfig;
+
+        const pkgJSON = this.fs.readJSON(this.destinationPath('package.json'));
+        if (!pkgJSON || !pkgJSON.engines || !pkgJSON.engines.vscode) {
+            this.log('');
+            this.log('Unable to find `package.json` in the current directory.');
+            this.log('Please run the generator on the folder on an existing VSCode extension.');
+            this.abort = true;
+            return;
+        }
+
+        this.extensionConfig.name = pkgJSON.name;
+        this.extensionConfig.displayName = pkgJSON.displayName;
+
+        const dependencyVersions = this.extensionConfig.dependencyVersions;
+
+        this.fs.extendJSON('package.json', {
+            'browser': './dist/web/extension.js',
+            'scripts': {
+                "compile-web": "webpack --config ./build/web-extension.webpack.config.js",
+                "watch-web": "webpack --watch --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
+                "package-web": "webpack --mode production --watch --config ./build/web-extension.webpack.config.js",
+            },
+            'devDependencies': {
+                'ts-loader': dependencyVersions['ts-loader'],
+                'webpack': dependencyVersions['webpack'],
+                'webpack-cli': dependencyVersions['webpack-cli']
+            }
+        });
+
+        this.fs.copyTpl(this.sourceRoot() + '/src/web/extension.ts', 'src/web/extension.ts', context, {});
+
+        this.fs.copyTpl(this.sourceRoot() + '/build/node-extension.webpack.config.js', 'build/node-extension.webpack.config.js', context);
+        this.fs.copyTpl(this.sourceRoot() + '/build/web-extension.webpack.config.js', 'build/web-extension.webpack.config.js', context);
+
+        this.extensionConfig.installDependencies = false;
+    }
+
     // Installation
     install() {
         if (this.abort) {
             return;
         }
-        process.chdir(this.extensionConfig.name);
 
         if (this.extensionConfig.installDependencies) {
+            process.chdir(this.extensionConfig.name);
             this.installDependencies({
                 yarn: this.extensionConfig.pkgManager === 'yarn',
                 npm: this.extensionConfig.pkgManager === 'npm',
@@ -312,6 +333,12 @@ module.exports = class extends Generator {
     // End
     end() {
         if (this.abort) {
+            return;
+        }
+
+        if (this.extensionConfig.type === 'ext-command-web-update') {
+            this.log('');
+            this.log('Your extension has been updated!');
             return;
         }
 
