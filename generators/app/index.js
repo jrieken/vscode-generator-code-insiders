@@ -52,12 +52,12 @@ module.exports = class extends Generator {
                     value: 'ext-command-web'
                 },
                 {
-                    name: 'Update to Web Extension',
-                    value: 'ext-command-web-update'
-                },
-                {
                     name: 'New Notebook Renderer (TypeScript)',
                     value: 'ext-notebook-renderer'
+                },
+                {
+                    name: 'Add Web bits to existing extension (TypeScript)',
+                    value: 'ext-command-web-update'
                 },
             ];
 
