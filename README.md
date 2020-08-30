@@ -1,8 +1,8 @@
-# Yo Code - Extension and Customization Generator
+# Yo Code Insiders - Extension and Customization Generator
 
 [![Build Status](https://dev.azure.com/ms/vscode-generator-code/_apis/build/status/Microsoft.vscode-generator-code-insiders)](https://dev.azure.com/ms/vscode-generator-code-insiders/_build/latest?definitionId=17)
 
-This Yeoman generator helps get with VSCode APIs in development.
+This Yeoman generator helps you with extensions that use VSCode APIs in development.
 
 ## Install the Generator
 
