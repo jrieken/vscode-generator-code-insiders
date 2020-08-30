@@ -287,6 +287,14 @@ module.exports = class extends Generator {
             return;
         }
 
+        this.log('To make this extension a web extension, the generator will add the following:');
+        this.log('- A new main module `src/web/extension.ts` used when running in the web extension host.');
+        this.log('- New webpack configuration file `build/web-extension.webpack.config.js`');
+        this.log('- Updates to `package.json`:');
+        this.log('  - new property `browser`: points to the packaged web main module.');
+        this.log('  - new devDependencies: adds `webpack`, `webpack-cli` and `ts-loader`');
+        this.log('  - new scripts: `compile-web`, `watch-web` and `package-web`');
+
         this.extensionConfig.name = pkgJSON.name;
         this.extensionConfig.displayName = pkgJSON.displayName;
 
@@ -308,10 +316,14 @@ module.exports = class extends Generator {
 
         this.fs.copyTpl(this.sourceRoot() + '/src/web/extension.ts', 'src/web/extension.ts', context, {});
 
-        this.fs.copyTpl(this.sourceRoot() + '/build/node-extension.webpack.config.js', 'build/node-extension.webpack.config.js', context);
         this.fs.copyTpl(this.sourceRoot() + '/build/web-extension.webpack.config.js', 'build/web-extension.webpack.config.js', context);
 
-        this.extensionConfig.installDependencies = false;
+        if (this.fs.exists(this.destinationPath('yarn.lock'))) {
+            this.extensionConfig.pkgManager = 'yarn';
+        } else {
+            this.extensionConfig.pkgManager = 'npm';
+        }
+        this.extensionConfig.installDependencies = true;
     }
 
     // Installation
@@ -321,7 +333,9 @@ module.exports = class extends Generator {
         }
 
         if (this.extensionConfig.installDependencies) {
-            process.chdir(this.extensionConfig.name);
+            if (this.extensionConfig.type.indexOf('update') === -1) {
+                process.chdir(this.extensionConfig.name);
+            }
             this.installDependencies({
                 yarn: this.extensionConfig.pkgManager === 'yarn',
                 npm: this.extensionConfig.pkgManager === 'npm',
@@ -339,6 +353,12 @@ module.exports = class extends Generator {
         if (this.extensionConfig.type === 'ext-command-web-update') {
             this.log('');
             this.log('Your extension has been updated!');
+            this.log('');
+            this.log('To start editing with Visual Studio Code, use the following commands:');
+            this.log('');
+            this.log('     code-insiders .');
+            this.log(`     ${this.extensionConfig.pkgManager} run compile-web`);
+            this.log('');
             return;
         }
 
