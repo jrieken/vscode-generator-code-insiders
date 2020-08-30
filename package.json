@@ -12,10 +12,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-generator-code.git"
+    "url": "https://github.com/aeschli/vscode-generator-code-insiders.git"
   },
   "bugs": {
-    "url": "https://github.com/Microsoft/vscode-generator-code/issues"
+    "url": "https://github.com/aeschli/vscode-generator-code-insiders/issues"
   },
   "main": "./generators/app/index.js",
   "homepage": "http://code.visualstudio.com",
