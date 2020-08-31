@@ -262,10 +262,8 @@ module.exports = class extends Generator {
         this.fs.copyTpl(this.sourceRoot() + '/vsc-extension-quickstart.md', context.name + '/vsc-extension-quickstart.md', context);
         this.fs.copyTpl(this.sourceRoot() + '/tsconfig.json', context.name + '/tsconfig.json', context);
 
-        this.fs.copyTpl(this.sourceRoot() + '/src/node/extension.ts', context.name + '/src/node/extension.ts', context);
         this.fs.copyTpl(this.sourceRoot() + '/src/web/extension.ts', context.name + '/src/web/extension.ts', context);
 
-        this.fs.copyTpl(this.sourceRoot() + '/build/node-extension.webpack.config.js', context.name + '/build/node-extension.webpack.config.js', context);
         this.fs.copyTpl(this.sourceRoot() + '/build/web-extension.webpack.config.js', context.name + '/build/web-extension.webpack.config.js', context);
         this.fs.copyTpl(this.sourceRoot() + '/package.json', context.name + '/package.json', context);
 
@@ -292,7 +290,7 @@ module.exports = class extends Generator {
         this.log('- New webpack configuration file `build/web-extension.webpack.config.js`');
         this.log('- Updates to `package.json`:');
         this.log('  - new property `browser`: points to the packaged web main module.');
-        this.log('  - new devDependencies: adds `webpack`, `webpack-cli` and `ts-loader`');
+        this.log('  - new devDependencies: `webpack`, `webpack-cli` and `ts-loader`');
         this.log('  - new scripts: `compile-web`, `watch-web` and `package-web`');
 
         this.extensionConfig.name = pkgJSON.name;
@@ -303,8 +301,8 @@ module.exports = class extends Generator {
         this.fs.extendJSON('package.json', {
             'browser': './dist/web/extension.js',
             'scripts': {
-                "compile-web": "webpack --config ./build/web-extension.webpack.config.js",
-                "watch-web": "webpack --watch --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
+                "compile-web": "webpack --devtool nosources-source-map --config ./build/web-extension.webpack.config.js",
+                "watch-web": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
                 "package-web": "webpack --mode production --watch --config ./build/web-extension.webpack.config.js",
             },
             'devDependencies': {

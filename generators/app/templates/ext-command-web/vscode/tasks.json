@@ -5,7 +5,7 @@
     "tasks": [
         {
             "type": "npm",
-            "script": "compile",
+            "script": "compile-web",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -17,13 +17,26 @@
         },
         {
             "type": "npm",
-            "script": "watch",
+            "script": "watch-web",
             "group": "build",
             "isBackground": true,
             "problemMatcher": [
                 "$ts-webpack-watch",
                 "$tslint-webpack-watch"
             ]
-        }
+        },
+        {
+			"type": "npm",
+			"script": "pretest",
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
     ]
 }

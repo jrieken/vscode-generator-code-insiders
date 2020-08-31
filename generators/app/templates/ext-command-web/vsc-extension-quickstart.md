@@ -2,23 +2,22 @@
 
 ## What's in the folder
 
-* This folder contains all of the files necessary for your extension.
+* This folder contains all of the files necessary for your web extension.
 * `package.json` - this is the manifest file in which you declare your extension and command.
-  * The sample plugin registers a command and defines its title and command name. With this information VS Code can show the command in the command palette. It doesn’t yet need to load the plugin.
-* `src/extension.ts` - this is the main file where you will provide the implementation of your command.
-  * The file exports one function, `activate`, which is called the very first time your extension is activated (in this case by executing the command). Inside the `activate` function we call `registerCommand`.
-  * We pass the function containing the implementation of the command as the second parameter to `registerCommand`.
+* `src/web/extension.ts` - this is the main file for the browser
+* `build/web-extension.webpack.config.js` - the webpack config file for the web main
 
-## Get up and running straight away
+## Get up and running the Web Extension
 
-* Press `F5` to open a new window with your extension loaded.
-* Run your command from the command palette by pressing (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and typing `Hello World`.
-* Set breakpoints in your code inside `src/extension.ts` to debug your extension.
-* Find output from your extension in the debug console.
+* ⚠️ configure in vscode: `"extensions.webWorker": true`
+* `npm install`
+* place breakpoints in `src/web/extension.ts`
+* debug via F5 (Run Extension)
+* execute extension code via `F1 > Hello world`
 
 ## Make changes
 
-* You can relaunch the extension from the debug toolbar after changing code in `src/extension.ts`.
+* You can relaunch the extension from the debug toolbar after changing code in `src/web/extension.ts`.
 * You can also reload (`Ctrl+R` or `Cmd+R` on Mac) the VS Code window with your extension to load your changes.
 
 
@@ -37,6 +36,5 @@
 
 ## Go further
 
- * Reduce the extension size and improve the startup time by [bundling your extension](https://code.visualstudio.com/api/working-with-extensions/bundling-extension).
  * [Publish your extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) on the VSCode extension marketplace.
  * Automate builds by setting up [Continuous Integration](https://code.visualstudio.com/api/working-with-extensions/continuous-integration).

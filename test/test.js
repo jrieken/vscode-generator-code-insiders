@@ -7,35 +7,6 @@ var env = require('../generators/app/env');
 
 var fs = require('fs');
 
-function stripComments(content) {
-    /**
-    * First capturing group matches double quoted string
-    * Second matches single quotes string
-    * Third matches block comments
-    * Fourth matches line comments
-    */
-    var regexp = /("(?:[^\\\"]*(?:\\.)?)*")|('(?:[^\\\']*(?:\\.)?)*')|(\/\*(?:\r?\n|.)*?\*\/)|(\/{2,}.*?(?:(?:\r?\n)|$))/g;
-    var result = content.replace(regexp, (match, m1, m2, m3, m4) => {
-        // Only one of m1, m2, m3, m4 matches
-        if (m3) {
-            // A block comment. Replace with nothing
-            return '';
-        } else if (m4) {
-            // A line comment. If it ends in \r?\n then keep it.
-            var length = m4.length;
-            if (length > 2 && m4[length - 1] === '\n') {
-                return m4[length - 2] === '\r' ? '\r\n' : '\n';
-            } else {
-                return '';
-            }
-        } else {
-            // We match a string
-            return match;
-        }
-    });
-    return result;
-}
-
 
 describe('test code generator', function () {
     this.timeout(10000);
@@ -98,17 +69,13 @@ describe('test code generator', function () {
                         "webpack",
                         "webpack-cli"
                     ]),
-                    "main": "./dist/node/extension.js",
                     "browser": "./dist/web/extension.js",
                     "scripts": {
                         "test": "node ./out/test/runTests.js",
                         "pretest": "tsc -p ./",
-                        "vscode:prepublish": "npm run package-web && npm run package-web",
-                        "package": "webpack --mode production --config ./build/node-extension.webpack.config.js",
-                        "compile": "webpack --config ./build/node-extension.webpack.config.js",
-                        "watch": "webpack --watch --info-verbosity verbose --config ./build/node-extension.webpack.config.js",
-                        "compile-web": "webpack --config ./build/web-extension.webpack.config.js",
-                        "watch-web": "webpack --watch --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
+                        "vscode:prepublish": "npm run package-web",
+                        "compile-web": "webpack --devtool nosources-source-map --config ./build/web-extension.webpack.config.js",
+                        "watch-web": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
                         "package-web": "webpack --mode production --watch --config ./build/web-extension.webpack.config.js",
                         "lint": "eslint src --ext ts"
                     },
@@ -125,7 +92,7 @@ describe('test code generator', function () {
                 try {
 
 
-                    assert.file(['package.json', 'README.md', 'CHANGELOG.md', '.vscodeignore', 'src/node/extension.ts', 'src/web/extension.ts', 'build/node-extension.webpack.config.js', 'build/web-extension.webpack.config.js', 'src/test/suite/extension.test.ts', 'src/test/suite/index.ts', 'tsconfig.json']);
+                    assert.file(['package.json', 'README.md', 'CHANGELOG.md', '.vscodeignore', 'src/web/extension.ts', 'build/web-extension.webpack.config.js', 'src/test/suite/extension.test.ts', 'src/test/suite/index.ts', 'tsconfig.json']);
 
                     var packageJSONBody = fs.readFileSync('package.json', 'utf8')
                     var actualPackageJSON = JSON.parse(packageJSONBody);
