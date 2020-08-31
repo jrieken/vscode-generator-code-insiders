@@ -76,7 +76,7 @@ describe('test code generator', function () {
                         "vscode:prepublish": "npm run package-web",
                         "compile-web": "webpack --devtool nosources-source-map --config ./build/web-extension.webpack.config.js",
                         "watch-web": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
-                        "package-web": "webpack --mode production --watch --config ./build/web-extension.webpack.config.js",
+                        "package-web": "webpack --mode production --config ./build/web-extension.webpack.config.js",
                         "lint": "eslint src --ext ts"
                     },
                     "categories": [
