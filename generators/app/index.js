@@ -303,7 +303,7 @@ module.exports = class extends Generator {
             'scripts': {
                 "compile-web": "webpack --devtool nosources-source-map --config ./build/web-extension.webpack.config.js",
                 "watch-web": "webpack --watch --devtool nosources-source-map --info-verbosity verbose --config ./build/web-extension.webpack.config.js",
-                "package-web": "webpack --mode production --watch --config ./build/web-extension.webpack.config.js",
+                "package-web": "webpack --mode production --config ./build/web-extension.webpack.config.js",
             },
             'devDependencies': {
                 'ts-loader': dependencyVersions['ts-loader'],
